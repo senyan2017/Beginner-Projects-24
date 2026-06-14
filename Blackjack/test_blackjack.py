@@ -311,8 +311,8 @@ class TestPlayRoundIntegration(unittest.TestCase):
         balance, _ = play_round(1000)
         self.assertEqual(balance, 1000)  # push → no change
 
-    @patch('Blackjack.Blackjack.deal_card')
-    @patch('Blackjack.Blackjack.create_deck')
+    @patch('Blackjack.deal_card')
+    @patch('Blackjack.create_deck')
     @patch('builtins.input')
     def test_dealer_bust_player_wins(self, mock_input, mock_create, mock_deal):
         """Dealer busts → player wins bet."""
@@ -329,8 +329,8 @@ class TestPlayRoundIntegration(unittest.TestCase):
         balance, _ = play_round(1000)
         self.assertEqual(balance, 1100)  # won 100
 
-    @patch('Blackjack.Blackjack.deal_card')
-    @patch('Blackjack.Blackjack.create_deck')
+    @patch('Blackjack.deal_card')
+    @patch('Blackjack.create_deck')
     @patch('builtins.input')
     def test_player_bust_loses(self, mock_input, mock_create, mock_deal):
         """Player busts on hit → loses bet."""
@@ -347,8 +347,8 @@ class TestPlayRoundIntegration(unittest.TestCase):
         balance, _ = play_round(1000)
         self.assertEqual(balance, 900)  # lost 100
 
-    @patch('Blackjack.Blackjack.deal_card')
-    @patch('Blackjack.Blackjack.create_deck')
+    @patch('Blackjack.deal_card')
+    @patch('Blackjack.create_deck')
     @patch('builtins.input')
     def test_player_wins_higher_hand(self, mock_input, mock_create, mock_deal):
         """Player has higher hand than dealer → wins."""
@@ -364,8 +364,8 @@ class TestPlayRoundIntegration(unittest.TestCase):
         balance, _ = play_round(1000)
         self.assertEqual(balance, 1100)
 
-    @patch('Blackjack.Blackjack.deal_card')
-    @patch('Blackjack.Blackjack.create_deck')
+    @patch('Blackjack.deal_card')
+    @patch('Blackjack.create_deck')
     @patch('builtins.input')
     def test_dealer_wins_higher_hand(self, mock_input, mock_create, mock_deal):
         """Dealer has higher hand → player loses."""
