@@ -1,175 +1,180 @@
-# General plan:
-# Give player two cards
-# Have 4 of each card, so if player or dealer gets one, they have less chance of getting same
-# Have "hit/stick" ability
-# GIVE USER CHOICE OF HAVING ACE BE 1 OR 11!
-
-# MAKE THIS CODE NEATER BY USING FUNCTIONS! (Maybe make a new branch for this)
-# todo Allow dealer to draw fourth card.
-# todo If player is dealt a card, that card should be removed from deck. So less chance of getting it next time!
-# todo (ADVANCED FEATURE) Add ability to bet
-# todo (ADVANCED FEATURE) Add suits
-
-import numpy as np
-
-play_again = 'true'
-
-while play_again == 'true':
-
-        deck = ['A', 'A', 'A', 'A', 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 6, 6, 6, 6, 7, 7, 7, 7,
-                8, 8, 8, 8, 9, 9, 9, 9, 10, 10, 10, 10, 'J', 'J', 'J', 'J',
-                'Q', 'Q', 'Q', 'Q', 'K', 'K', 'K', 'K']
-        
-        #Function for checking if the player wants to play again after the game ends
-        def play_again_option():
-                print('Would you like to play again?')
-                play_again_input = input('?> ').lower()
-                if play_again_input == 'no':
-                        quit()
-                elif play_again_input == 'yes':
-                        print('')
-                        play_again = 'true'
-                else:
-                        print('Please choose one of the options!')
-                        play_again_option()
-                        
-      
-        def stick():
-            print('Stick, got it')
-            print('The value of your hand is {}'.format(hand_value))
-            print('The value of the dealer\'s hand is {}'.format(dealer_hand_value))
-            if hand_value > dealer_hand_value:
-                print('You win!')
-                #Checks if player wants to play again
-                play_again_option()
-            else:
-                print('Dealer wins!')
-                #Checks if player wants to play again
-                play_again_option()
+import random
 
 
-        def card_value(card):
-            if card in range(2, 11):
-                card_value = card
-            if card == 'A':
-                #Player chooses whether to use Ace as a 1 or 11
-                temp_var = 'true'
-                while temp_var == 'true':
-                        print('You got an Ace! Do you choose a value of 1 or 11?')
-                        ace_input = input('?> ')
-                        if ace_input == '1':
-                                card_value = 1
-                                temp_var = 'false'
-                        elif ace_input == '11':
-                                card_value = 11
-                                temp_var = 'false'
-                        else:
-                                print('Please choose one of the options!')
-            # If card is J/Q/K
-            if card in ['J', 'Q', 'K']:
-                card_value = 10
-            return card_value
+def create_deck():
+    """Return a fresh 52-card deck (4 of each rank)."""
+    ranks = ['A', 2, 3, 4, 5, 6, 7, 8, 9, 10, 'J', 'Q', 'K']
+    return [card for card in ranks for _ in range(4)]
 
 
-        card1_index = np.random.randint(52)
-        card2_index = np.random.randint(52)
+def deal_card(deck):
+    """Draw one random card from the deck and remove it."""
+    if not deck:
+        raise RuntimeError("Deck is empty — cannot deal.")
+    idx = random.randint(0, len(deck) - 1)
+    return deck.pop(idx)
 
-        # print('The randomly generated index for card 1 is {}'.format(card1_index))
-        # print('The randomly generated index for card 2 is {}'.format(card2_index))
 
-        card1 = deck[card1_index]
-        card2 = deck[card2_index]
+def card_numeric_value(card):
+    """Return the base numeric value of a non-Ace card. Ace returns 11 (caller adjusts)."""
+    if card in ('J', 'Q', 'K', 'A'):
+        return 11 if card == 'A' else 10
+    return card
 
-        print('First card is a {}'.format(card1))
-        print('Second card is a {}'.format(card2))
 
-        # assign card values
-        card1_value = card_value(card1)
-        card2_value = card_value(card2)
+def prompt_ace_value(current_total):
+    """Ask the player to choose 1 or 11 for an Ace. Hint if 11 would bust."""
+    while True:
+        if current_total + 11 > 21:
+            print('  You drew an Ace! (Choosing 11 would bust — only 1 is safe.)')
+        else:
+            print('  You drew an Ace! Choose its value: 1 or 11?')
+        choice = input('  ?> ').strip()
+        if choice == '1':
+            return 1
+        if choice == '11':
+            return 11
+        print('  Please enter 1 or 11.')
 
-        # #VALUE OF YOUR HAND
-        hand_value = card1_value + card2_value
-        print('The value of your hand is {}'.format(hand_value))
 
-        # #DEALER HAND
-        dealer1_index = np.random.randint(52)
-        dealer2_index = np.random.randint(52)
+def compute_dealer_total(cards):
+    """Compute dealer hand total. Each Ace counts as 11 if it keeps total <= 21, else 1."""
+    total = 0
+    aces = 0
+    for card in cards:
+        if card == 'A':
+            aces += 1
+        else:
+            total += card_numeric_value(card)
+    for _ in range(aces):
+        if total + 11 <= 21:
+            total += 11
+        else:
+            total += 1
+    return total
 
-        dealer1 = deck[dealer1_index]
-        dealer2 = deck[dealer2_index]
 
-        # #ASSIGNING DEALER CARD 1 VALUEs
-        dealer1_value = card_value(dealer1)
-        dealer2_value = card_value(dealer2)
+def add_card_to_player_hand(deck, player_cards, player_total):
+    """Draw a card for the player, handle Ace prompt, update total. Returns new total."""
+    card = deal_card(deck)
+    player_cards.append(card)
+    print(f'  You drew: {card}')
+    if card == 'A':
+        value = prompt_ace_value(player_total)
+        player_total += value
+    else:
+        player_total += card_numeric_value(card)
+    return player_total
 
-        # #VALUE OF DEALER HAND
-        dealer_hand_value = dealer1_value + dealer2_value
-        print('Dealer hand value (just here for debugging) is {}'.format(dealer_hand_value))
 
-        # Dealer drawing a third card
-        if dealer_hand_value < 15:
-            print('dealer is drawing a third card (just here for debugging)')
-            dealer3_index = np.random.randint(52)
-            dealer3 = deck[dealer3_index]
+def settle(player_total, dealer_total):
+    """Print final result and return one of: 'win', 'lose', 'push'."""
+    print('')
+    print('=' * 32)
+    print('           RESULTS')
+    print('=' * 32)
+    print(f'  Your total  : {player_total}')
+    print(f'  Dealer total: {dealer_total}')
 
-            # #ASSIGNING DEALER 3 VALUE
-            dealer3_value = card_value(dealer3)
+    if player_total > 21 and dealer_total > 21:
+        print('  Both bust — push (tie)!')
+        return 'push'
+    if dealer_total > 21:
+        print('  Dealer busts! You win!')
+        return 'win'
+    if player_total > 21:
+        print('  Bust! You lose.')
+        return 'lose'
+    if player_total > dealer_total:
+        print('  You win!')
+        return 'win'
+    if dealer_total > player_total:
+        print('  Dealer wins!')
+        return 'lose'
+    print('  Push — it\'s a tie!')
+    return 'push'
 
-            # #NEW VALUE OF DEALER HAND
-            dealer_hand_value += dealer3_value
-            print('New dealer hand value is {}'.format(dealer_hand_value))
 
-            if dealer_hand_value > 21:
-                print('Dealer is bust!')
-                print('You win!')
-                #Checks if player wants to play again
-                play_again_option()
-                
+def play_game():
+    """Run a single round of Blackjack."""
+    deck = create_deck()
 
-        # HIT OR STICK
-        print('Hit, or stick?', end=' ')
+    # --- Deal player's first two cards ---
+    print('Dealing your cards...')
+    player_cards = []
+    player_total = 0
+    for _ in range(2):
+        player_total = add_card_to_player_hand(deck, player_cards, player_total)
+    print(f'  Your hand: {player_cards}  (total: {player_total})')
+
+    # --- Deal dealer's first two cards (hidden from player, just reveal first) ---
+    dealer_cards = [deal_card(deck) for _ in range(2)]
+    print(f'  Dealer shows: {dealer_cards[0]}  (one card hidden)')
+
+    dealer_total = compute_dealer_total(dealer_cards)
+
+    # --- Early termination: natural blackjack ---
+    if player_total == 21 and dealer_total == 21:
+        print(f'  Both have Blackjack!')
+        settle(player_total, dealer_total)
+        return
+    if player_total == 21:
+        print('  Blackjack!')
+        settle(player_total, dealer_total)
+        return
+    if dealer_total == 21:
+        print(f'  Dealer has Blackjack!')
+        settle(player_total, dealer_total)
+        return
+
+    # --- Player's turn: hit or stick loop ---
+    while True:
+        if player_total > 21:
+            print(f'  Bust! Your total is {player_total}.')
+            break
+
+        action = input('  Hit or stick? > ').strip().lower()
+        if action == 'hit':
+            player_total = add_card_to_player_hand(deck, player_cards, player_total)
+            print(f'  Your hand: {player_cards}  (total: {player_total})')
+        elif action == 'stick':
+            print(f'  You stick with {player_total}.')
+            break
+        else:
+            print('  Please type "hit" or "stick".')
+
+    # --- Dealer's turn: hit until total >= 17 ---
+    print('')
+    print(f'  Dealer reveals: {dealer_cards}')
+    dealer_total = compute_dealer_total(dealer_cards)
+    print(f'  Dealer total: {dealer_total}')
+
+    while dealer_total < 17:
+        card = deal_card(deck)
+        dealer_cards.append(card)
+        dealer_total = compute_dealer_total(dealer_cards)
+        print(f'  Dealer drew: {card}  (total: {dealer_total})')
+
+    # --- Settlement ---
+    settle(player_total, dealer_total)
+
+
+def main():
+    """Main loop: play rounds until the player quits."""
+    print('=== Welcome to Blackjack ===')
+    while True:
         print('')
-        user_input = input('?> ').lower()
+        play_game()
         print('')
+        while True:
+            again = input('Play again? (yes/no) > ').strip().lower()
+            if again in ('yes', 'no'):
+                break
+            print('Please type "yes" or "no".')
+        if again == 'no':
+            print('Thanks for playing!')
+            break
 
-        if user_input == 'hit':
-            print('Ok partner, third card coming up')
-            card3_index = np.random.randint(52)
-            card3 = deck[card3_index]
-            print('Third card is a {}'.format(card3))
 
-            # #ASSIGNING CARD 3 VALUE
-            card3_value = card_value(card3)
-
-            hand_value += card3_value
-            print('The value of your hand is now {}'.format(hand_value))
-            if hand_value > 21:
-                print('Bust! Too bad.')
-                #Checks if player wants to play again
-                play_again_option()
-
-            if hand_value <= 21:
-                print('Hit, or stick?')
-                user_input = input('?> ').lower()
-
-                if user_input == 'hit':
-                    print('Ok partner, fourth card coming up')
-                    card4_index = np.random.randint(52)
-                    card4 = deck[card4_index]
-                    print('Fourth card is a {}'.format(card4))
-
-                    # ASSIGNING CARD 4 VALUE
-                    card4_value = card_value(card4)
-
-                    hand_value += card4_value
-                    print('The value of your hand is now {}'.format(hand_value))
-                    if hand_value > 21:
-                        print('Bust! Too bad.')
-                        #Checks if player wants to play again
-                        play_again_option()
-
-            elif user_input == 'stick':
-                stick()
-
-        elif user_input == 'stick':
-                stick()
+if __name__ == '__main__':
+    main()
